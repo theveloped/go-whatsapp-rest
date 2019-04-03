@@ -11,3 +11,6 @@ ROUTER_BASE_PATH: "/api"
 ## Cryptography Configuration
 CRYPT_PRIVATE_KEY_FILE: "./configs/key.pem"
 CRYPT_PUBLIC_KEY_FILE: "./configs/key.pub"
+
+# Admin password for basic authorization
+AUTH_PASSWORD: "this-should-really-be-changed"

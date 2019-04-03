@@ -108,4 +108,7 @@ func configLoadValues() {
 
 	// Crypt RSA Public Key File Value
 	Config.SetDefault("CRYPT_PUBLIC_KEY_FILE", "./public.key")
+
+	// Crypt admin password
+	Config.SetDefault("AUTH_PASSWORD", "83e4060e-78e1-4fe5-9977-aeeccd46a2b8")
 }

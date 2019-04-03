@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	svc "github.com/dimaskiddo/go-whatsapp-rest/service"
+	svc "github.com/theveloped/go-whatsapp-rest/service"
 )
 
 // Server Variable

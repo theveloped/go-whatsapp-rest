@@ -3,7 +3,7 @@ package controller
 import (
 	"net/http"
 
-	svc "github.com/dimaskiddo/go-whatsapp-rest/service"
+	svc "github.com/theveloped/go-whatsapp-rest/service"
 )
 
 // GetIndex Function to Show API Information

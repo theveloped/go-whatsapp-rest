@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	hlp "github.com/dimaskiddo/go-whatsapp-rest/helper"
-	svc "github.com/dimaskiddo/go-whatsapp-rest/service"
+	hlp "github.com/theveloped/go-whatsapp-rest/helper"
+	svc "github.com/theveloped/go-whatsapp-rest/service"
 )
 
 type reqWhatsAppLogin struct {
@@ -88,7 +88,7 @@ func WhatsAppLogin(w http.ResponseWriter, r *http.Request) {
             <title>WhatsApp Login</title>
           </head>
           <body>
-            <img src="` + qrcode + `" />              
+            <img src="` + qrcode + `" />
             <p>
               <b>QR Code Scan</b>
               <br/>

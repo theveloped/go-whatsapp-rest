@@ -1,8 +1,8 @@
 package main
 
 import (
-	ctl "github.com/dimaskiddo/go-whatsapp-rest/controller"
-	svc "github.com/dimaskiddo/go-whatsapp-rest/service"
+	ctl "github.com/theveloped/go-whatsapp-rest/controller"
+	svc "github.com/theveloped/go-whatsapp-rest/service"
 )
 
 // RoutesInit Function

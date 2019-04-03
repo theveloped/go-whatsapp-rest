@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	svc "github.com/dimaskiddo/go-whatsapp-rest/service"
+	svc "github.com/theveloped/go-whatsapp-rest/service"
 )
 
 // GetAuth Function to Get Authorization Token
@@ -17,7 +17,7 @@ func GetAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if reqBody.Password != "83e4060e-78e1-4fe5-9977-aeeccd46a2b8" {
+	if reqBody.Password != svc.Config.GetString("AUTH_PASSWORD") {
 		svc.ResponseBadRequest(w, "invalid authorization")
 		return
 	}
