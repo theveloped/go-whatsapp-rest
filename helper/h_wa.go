@@ -9,9 +9,49 @@ import (
 	"strings"
 	"time"
 
+	"fmt"
+
+	"bytes"
+	"net/http"
+	"encoding/json"
+
 	whatsapp "github.com/dimaskiddo/go-whatsapp"
 	qrcode "github.com/skip2/go-qrcode"
 )
+
+type responseHandler struct{
+	webhook 	string
+    created 	uint64
+}
+
+func (wh responseHandler) HandleError(err error) {
+	fmt.Fprintf(os.Stderr, "%v", err)
+}
+
+func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
+	if !message.Info.FromMe && message.Info.Timestamp >= wh.created {
+		jsonStr, _ := json.Marshal(message)
+		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
+	}
+}
+
+func (wh responseHandler) HandleImageMessage(message whatsapp.ImageMessage) {
+	if !message.Info.FromMe && message.Info.Timestamp >= wh.created {
+		jsonStr, _ := json.Marshal(message)
+		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
+	}
+}
+
+func (wh responseHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
+	if !message.Info.FromMe && message.Info.Timestamp >= wh.created {
+		jsonStr, _ := json.Marshal(message)
+		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
+	}
+}
+
+func (wh responseHandler) HandleJsonMessage(message string) {
+	_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer([]byte(message)))
+}
 
 var wac = make(map[string]*whatsapp.Conn)
 
@@ -149,7 +189,7 @@ func WASessionLogout(jid string, file string) error {
 	return nil
 }
 
-func WAConnect(jid string, timeout int, file string, qrstr chan<- string, errmsg chan<- error) {
+func WAConnect(jid string, webhook string, timeout int, file string, qrstr chan<- string, errmsg chan<- error) {
 	if wac[jid] != nil {
 		chanqr := make(chan string)
 		go func() {
@@ -166,6 +206,10 @@ func WAConnect(jid string, timeout int, file string, qrstr chan<- string, errmsg
 				errmsg <- errors.New("qr code generate timed out")
 			}
 		}()
+
+		if len(webhook) > 0 {
+			wac[jid].AddHandler(responseHandler{webhook, uint64(time.Now().Unix())})
+		}
 
 		session, err := WASessionLoad(file)
 		if err != nil {
@@ -213,6 +257,8 @@ func WAMessageText(jid string, jidDest string, msgText string, msgDelay int) err
 			Text: msgText,
 		}
 
+		_, _ = wac[jid].Presence(jidDest + jidPrefix, "composing")
+
 		<-time.After(time.Duration(msgDelay) * time.Second)
 
 		err := wac[jid].Send(content)
@@ -249,6 +295,8 @@ func WAMessageImage(jid string, jidDest string, msgImageStream multipart.File, m
 			Type:    msgImageType,
 			Caption: msgCaption,
 		}
+
+		_, _ = wac[jid].Presence(jidDest + jidPrefix, "composing")
 
 		<-time.After(time.Duration(msgDelay) * time.Second)
 

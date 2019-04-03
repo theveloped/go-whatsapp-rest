@@ -13,6 +13,7 @@ import (
 type reqWhatsAppLogin struct {
 	Output  string `json:"output"`
 	Timeout int    `json:"timeout"`
+	Webhook  string `json:"webhook"`
 }
 
 type resWhatsAppLogin struct {
@@ -61,7 +62,7 @@ func WhatsAppLogin(w http.ResponseWriter, r *http.Request) {
 	errmsg := make(chan error)
 
 	go func() {
-		hlp.WAConnect(jid, reqBody.Timeout, file, qrstr, errmsg)
+		hlp.WAConnect(jid, reqBody.Webhook, reqBody.Timeout, file, qrstr, errmsg)
 	}()
 
 	select {
