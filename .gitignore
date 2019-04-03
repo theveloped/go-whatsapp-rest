@@ -1,6 +1,5 @@
-build/*
-build/stores/*
-build/uploads/*
 vendor
-!build/*.key
-!*.gitkeep
+stores/*
+uploads/*
+*.pem
+*.pub

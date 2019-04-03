@@ -1,7 +1,0 @@
-build/stores/*
-build/uploads/*
-controller
-helper
-service
-vendor
-!*.gitkeep

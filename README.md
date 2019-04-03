@@ -1,6 +1,14 @@
 # Go WhatsApp Implementation in REST API
 
-This repository contains example of implementation [dimaskiddo/go-whatsapp](https://github.com/dimaskiddo/go-whatsapp) package. This example is using a codebase from [dimaskiddo/codebase-go-rest-lite](https://github.com/dimaskiddo/codebase-go-rest-lite). For Postman Collection please contact me in private at [dimas.restu@student.upi.edu](mailto:dimas.restu@student.upi.edu).
+This is a fork from the [dimaskiddo/go-whatsapp-rest](https://github.com/dimaskiddo/go-whatsapp-rest) package. The addition of receiving text and image message using a webhook will be added to the original project.
+
+## Generating RSA keys
+
+To get started you will need an RSA private and public keypair. Get started by generating them using OpenSSL like so:
+```
+openssl genrsa -out mykey.pem 2048
+openssl rsa -in mykey.pem -pubout > mykey.pub
+```
 
 ## Getting Started
 

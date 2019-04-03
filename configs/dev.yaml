@@ -1,13 +1,13 @@
 ## Server Configuration
-SERVER_IP: "0.0.0.0"
+SERVER_IP: "127.0.0.1"
 SERVER_PORT: "3000"
 SERVER_STORE_PATH: "./stores"
 SERVER_UPLOAD_PATH: "./uploads"
 SERVER_UPLOAD_LIMIT: 8
 
 ## Router Configuration
-ROUTER_BASE_PATH: "/api/v1/whatsapp"
+ROUTER_BASE_PATH: "/api"
 
 ## Cryptography Configuration
-CRYPT_PRIVATE_KEY_FILE: "./private.key"
-CRYPT_PUBLIC_KEY_FILE: "./public.key"
+CRYPT_PRIVATE_KEY_FILE: "./configs/key.pem"
+CRYPT_PUBLIC_KEY_FILE: "./configs/key.pub"
