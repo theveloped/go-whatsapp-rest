@@ -5,9 +5,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"fmt"
 
 	hlp "github.com/theveloped/go-whatsapp-rest/helper"
 	svc "github.com/theveloped/go-whatsapp-rest/service"
+
+	"github.com/go-chi/chi"
+	"path/filepath"
 )
 
 type reqWhatsAppLogin struct {
@@ -129,6 +133,40 @@ func WhatsAppLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	svc.ResponseSuccess(w, "")
+}
+
+func WhatsAppGetAttachment(w http.ResponseWriter, r *http.Request) {
+	messageID := chi.URLParam(r, "messageID")
+
+  	if len(messageID) == 0 {
+    	http.Error(w, http.StatusText(422), 422)
+    	return
+  	}
+
+  	pattern := fmt.Sprintf("%v/%v.*", svc.Config.GetString("SERVER_UPLOAD_PATH"), messageID)
+  	matches, err := filepath.Glob(pattern)
+
+    if err != nil {
+    	http.Error(w, http.StatusText(404), 404)
+        return
+    }
+
+    if len(matches) == 0 {
+    	http.Error(w, http.StatusText(404), 404)
+        return
+    }
+
+    http.ServeFile(w, r, matches[0])
+}
+
+func WhatsAppSendGeneric(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if contentType == "application/json" {
+		WhatsAppSendText(w, r)
+
+	} else {
+		WhatsAppSendImage(w, r)
+	}
 }
 
 func WhatsAppSendText(w http.ResponseWriter, r *http.Request) {

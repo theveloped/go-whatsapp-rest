@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"encoding/json"
 
+	svc "github.com/theveloped/go-whatsapp-rest/service"
 	whatsapp "github.com/dimaskiddo/go-whatsapp"
 	qrcode "github.com/skip2/go-qrcode"
 )
@@ -25,7 +26,7 @@ type responseHandler struct{
 }
 
 func (wh responseHandler) HandleError(err error) {
-	fmt.Fprintf(os.Stderr, "%v", err)
+	fmt.Fprintf(os.Stderr, "[!] %v\n", err)
 }
 
 func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
@@ -36,21 +37,36 @@ func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
 }
 
 func (wh responseHandler) HandleImageMessage(message whatsapp.ImageMessage) {
-	if !message.Info.FromMe && message.Info.Timestamp >= wh.created {
+	if message.Info.FromMe && message.Info.Timestamp >= wh.created {
 		jsonStr, _ := json.Marshal(message)
 		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
-	}
-}
 
-func (wh responseHandler) HandleVideoMessage(message whatsapp.VideoMessage) {
-	if !message.Info.FromMe && message.Info.Timestamp >= wh.created {
-		jsonStr, _ := json.Marshal(message)
-		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
+		data, err := message.Download()
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+			return
+		}
+
+		filename := fmt.Sprintf("%v/%v.%v", svc.Config.GetString("SERVER_UPLOAD_PATH"), message.Info.Id, strings.Split(message.Type, "/")[1])
+		file, err := os.Create(filename)
+		defer file.Close()
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+			return
+		}
+
+		_, err = file.Write(data)
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+			return
+		}
+
+		fmt.Printf("[!] stored: %v\n", filename)
 	}
 }
 
 func (wh responseHandler) HandleJsonMessage(message string) {
-	_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer([]byte(message)))
+	fmt.Printf("[+] %v\n", message)
 }
 
 var wac = make(map[string]*whatsapp.Conn)
@@ -208,6 +224,7 @@ func WAConnect(jid string, webhook string, timeout int, file string, qrstr chan<
 		}()
 
 		if len(webhook) > 0 {
+			wac[jid].RemoveHandlers()
 			wac[jid].AddHandler(responseHandler{webhook, uint64(time.Now().Unix())})
 		}
 
