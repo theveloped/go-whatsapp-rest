@@ -111,4 +111,8 @@ func configLoadValues() {
 
 	// Crypt admin password
 	Config.SetDefault("AUTH_PASSWORD", "83e4060e-78e1-4fe5-9977-aeeccd46a2b8")
+
+	// Crypt admin password
+	Config.SetDefault("DIALOGFLOW_CREDENTIALS_PATH", "./configs/dialogflow-credentials.json")
+	Config.SetDefault("DIALOGFLOW_PROJECT_ID", "your-project-id")
 }

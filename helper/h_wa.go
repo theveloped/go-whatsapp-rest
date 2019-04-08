@@ -25,19 +25,49 @@ type responseHandler struct{
     created 	uint64
 }
 
+type messageTextResponse struct {
+    whatsapp.TextMessage
+    Response DialogResponse
+}
+
+type messageImageResponse struct {
+    whatsapp.ImageMessage
+    Response DialogResponse
+}
+
 func (wh responseHandler) HandleError(err error) {
 	fmt.Fprintf(os.Stderr, "[!] %v\n", err)
 }
 
-func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
-	if !message.Info.FromMe && message.Info.Timestamp >= wh.created {
+func (wh responseHandler) HandleTextMessage(message messageTextResponse) {
+	remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
+	dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Text, "en")
+
+	if err != nil {
+		fmt.Printf("[!] %v\n", err)
+		return
+	}
+
+	message.Response = dialogResponse
+
+	if message.Info.Timestamp >= wh.created {
 		jsonStr, _ := json.Marshal(message)
 		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
 	}
 }
 
-func (wh responseHandler) HandleImageMessage(message whatsapp.ImageMessage) {
-	if message.Info.FromMe && message.Info.Timestamp >= wh.created {
+func (wh responseHandler) HandleImageMessage(message messageImageResponse) {
+	if message.Info.Timestamp >= wh.created {
+		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
+		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Caption, "en")
+
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+			return
+		}
+
+		message.Response = dialogResponse
+
 		jsonStr, _ := json.Marshal(message)
 		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
 

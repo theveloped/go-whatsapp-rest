@@ -3,3 +3,4 @@ stores/*
 uploads/*
 *.pem
 *.pub
+*.json
