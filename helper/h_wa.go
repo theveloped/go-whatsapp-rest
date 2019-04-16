@@ -39,25 +39,28 @@ func (wh responseHandler) HandleError(err error) {
 	fmt.Fprintf(os.Stderr, "[!] %v\n", err)
 }
 
-func (wh responseHandler) HandleTextMessage(message messageTextResponse) {
-	remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
-	dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Text, "en")
+func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
+	if !message.Info.FromMe {
 
-	if err != nil {
-		fmt.Printf("[!] %v\n", err)
-		return
-	}
+		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
+		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Text, "en")
 
-	message.Response = dialogResponse
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+			return
+		}
 
-	if message.Info.Timestamp >= wh.created {
-		jsonStr, _ := json.Marshal(message)
+		responseMessage := messageTextResponse{TextMessage: message, Response: dialogResponse}
+
+		jsonStr, _ := json.Marshal(responseMessage)
 		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
 	}
 }
 
-func (wh responseHandler) HandleImageMessage(message messageImageResponse) {
-	if message.Info.Timestamp >= wh.created {
+func (wh responseHandler) HandleImageMessage(message whatsapp.ImageMessage) {
+	if !message.Info.FromMe {
+		fmt.Printf("[+] Handling image\n")
+
 		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
 		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Caption, "en")
 
@@ -66,9 +69,9 @@ func (wh responseHandler) HandleImageMessage(message messageImageResponse) {
 			return
 		}
 
-		message.Response = dialogResponse
+		responseMessage := messageImageResponse{ImageMessage: message, Response: dialogResponse}
 
-		jsonStr, _ := json.Marshal(message)
+		jsonStr, _ := json.Marshal(responseMessage)
 		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
 
 		data, err := message.Download()
@@ -254,7 +257,10 @@ func WAConnect(jid string, webhook string, timeout int, file string, qrstr chan<
 		}()
 
 		if len(webhook) > 0 {
-			wac[jid].RemoveHandlers()
+			// fmt.Printf("[!] removing webhooks\n")
+			// wac[jid].RemoveHandlers()
+
+			fmt.Printf("[!] adding webhook: %v\n", webhook)
 			wac[jid].AddHandler(responseHandler{webhook, uint64(time.Now().Unix())})
 		}
 
