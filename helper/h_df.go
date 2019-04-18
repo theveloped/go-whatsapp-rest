@@ -181,18 +181,10 @@ func DetectIntentText(projectID, sessionID, text, languageCode string) (DialogRe
     params := queryResult.Parameters.GetFields()
     if len(params) > 0 {
         for paramName, p := range params {
-            fmt.Printf("Param %s: %s (%s)", paramName, p.GetStringValue(), p.String())
             extractedValue := extractDialogflowEntities(p)
             dr.Entities[paramName] = extractedValue
         }
     }
-
-    fmt.Printf("[-] %v\n", dr)
-
-    // queryResult := response.GetQueryResult()
-    // fulfillmentText := queryResult.GetFulfillmentText()
-
-    // fmt.Printf("[-] %v\n", queryResult)
 
     return dr, nil
 }

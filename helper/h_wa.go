@@ -41,13 +41,13 @@ func (wh responseHandler) HandleError(err error) {
 
 func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	if !message.Info.FromMe {
+		fmt.Printf("[+] Handling text message\n")
 
 		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
 		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Text, "en")
 
 		if err != nil {
 			fmt.Printf("[!] %v\n", err)
-			return
 		}
 
 		responseMessage := messageTextResponse{TextMessage: message, Response: dialogResponse}
@@ -59,14 +59,13 @@ func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
 
 func (wh responseHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	if !message.Info.FromMe {
-		fmt.Printf("[+] Handling image\n")
+		fmt.Printf("[+] Handling image message\n")
 
 		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
 		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Caption, "en")
 
 		if err != nil {
 			fmt.Printf("[!] %v\n", err)
-			return
 		}
 
 		responseMessage := messageImageResponse{ImageMessage: message, Response: dialogResponse}
