@@ -14,3 +14,7 @@ CRYPT_PUBLIC_KEY_FILE: "./configs/key.pub"
 
 # Admin password for basic authorization
 AUTH_PASSWORD: "this-should-really-be-changed"
+
+# Dialogflow credentials
+DIALOGFLOW_CREDENTIALS_PATH: "./configs/dialogflow-credentials.json"
+DIALOGFLOW_PROJECT_ID: "your-project-id"

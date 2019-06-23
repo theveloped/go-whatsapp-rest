@@ -5,14 +5,19 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"fmt"
 
 	hlp "github.com/theveloped/go-whatsapp-rest/helper"
 	svc "github.com/theveloped/go-whatsapp-rest/service"
+
+	"github.com/go-chi/chi"
+	"path/filepath"
 )
 
 type reqWhatsAppLogin struct {
 	Output  string `json:"output"`
 	Timeout int    `json:"timeout"`
+	Webhook  string `json:"webhook"`
 }
 
 type resWhatsAppLogin struct {
@@ -61,7 +66,7 @@ func WhatsAppLogin(w http.ResponseWriter, r *http.Request) {
 	errmsg := make(chan error)
 
 	go func() {
-		hlp.WAConnect(jid, reqBody.Timeout, file, qrstr, errmsg)
+		hlp.WAConnect(jid, reqBody.Webhook, reqBody.Timeout, file, qrstr, errmsg)
 	}()
 
 	select {
@@ -128,6 +133,40 @@ func WhatsAppLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	svc.ResponseSuccess(w, "")
+}
+
+func WhatsAppGetAttachment(w http.ResponseWriter, r *http.Request) {
+	messageID := chi.URLParam(r, "messageID")
+
+  	if len(messageID) == 0 {
+    	http.Error(w, http.StatusText(422), 422)
+    	return
+  	}
+
+  	pattern := fmt.Sprintf("%v/%v.*", svc.Config.GetString("SERVER_UPLOAD_PATH"), messageID)
+  	matches, err := filepath.Glob(pattern)
+
+    if err != nil {
+    	http.Error(w, http.StatusText(404), 404)
+        return
+    }
+
+    if len(matches) == 0 {
+    	http.Error(w, http.StatusText(404), 404)
+        return
+    }
+
+    http.ServeFile(w, r, matches[0])
+}
+
+func WhatsAppSendGeneric(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if contentType == "application/json" {
+		WhatsAppSendText(w, r)
+
+	} else {
+		WhatsAppSendImage(w, r)
+	}
 }
 
 func WhatsAppSendText(w http.ResponseWriter, r *http.Request) {

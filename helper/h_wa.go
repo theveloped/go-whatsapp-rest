@@ -9,9 +9,97 @@ import (
 	"strings"
 	"time"
 
+	"fmt"
+
+	"bytes"
+	"net/http"
+	"encoding/json"
+
+	svc "github.com/theveloped/go-whatsapp-rest/service"
 	whatsapp "github.com/Rhymen/go-whatsapp"
 	qrcode "github.com/skip2/go-qrcode"
 )
+
+type responseHandler struct{
+	webhook 	string
+    created 	uint64
+}
+
+type messageTextResponse struct {
+    whatsapp.TextMessage
+    Response DialogResponse
+}
+
+type messageImageResponse struct {
+    whatsapp.ImageMessage
+    Response DialogResponse
+}
+
+func (wh responseHandler) HandleError(err error) {
+	fmt.Fprintf(os.Stderr, "[!] %v\n", err)
+}
+
+func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
+	if !message.Info.FromMe {
+		fmt.Printf("[+] Handling text message\n")
+
+		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
+		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Text, "en")
+
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+		}
+
+		responseMessage := messageTextResponse{TextMessage: message, Response: dialogResponse}
+
+		jsonStr, _ := json.Marshal(responseMessage)
+		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
+	}
+}
+
+func (wh responseHandler) HandleImageMessage(message whatsapp.ImageMessage) {
+	if !message.Info.FromMe {
+		fmt.Printf("[+] Handling image message\n")
+
+		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
+		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Caption, "en")
+
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+		}
+
+		responseMessage := messageImageResponse{ImageMessage: message, Response: dialogResponse}
+
+		jsonStr, _ := json.Marshal(responseMessage)
+		_, _ = http.Post(wh.webhook, "application/json", bytes.NewBuffer(jsonStr))
+
+		data, err := message.Download()
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+			return
+		}
+
+		filename := fmt.Sprintf("%v/%v.%v", svc.Config.GetString("SERVER_UPLOAD_PATH"), message.Info.Id, strings.Split(message.Type, "/")[1])
+		file, err := os.Create(filename)
+		defer file.Close()
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+			return
+		}
+
+		_, err = file.Write(data)
+		if err != nil {
+			fmt.Printf("[!] %v\n", err)
+			return
+		}
+
+		fmt.Printf("[!] stored: %v\n", filename)
+	}
+}
+
+func (wh responseHandler) HandleJsonMessage(message string) {
+	fmt.Printf("[+] %v\n", message)
+}
 
 var wac = make(map[string]*whatsapp.Conn)
 
@@ -149,7 +237,7 @@ func WASessionLogout(jid string, file string) error {
 	return nil
 }
 
-func WAConnect(jid string, timeout int, file string, qrstr chan<- string, errmsg chan<- error) {
+func WAConnect(jid string, webhook string, timeout int, file string, qrstr chan<- string, errmsg chan<- error) {
 	if wac[jid] != nil {
 		chanqr := make(chan string)
 		go func() {
@@ -166,6 +254,14 @@ func WAConnect(jid string, timeout int, file string, qrstr chan<- string, errmsg
 				errmsg <- errors.New("qr code generate timed out")
 			}
 		}()
+
+		if len(webhook) > 0 {
+			// fmt.Printf("[!] removing webhooks\n")
+			// wac[jid].RemoveHandlers()
+
+			fmt.Printf("[!] adding webhook: %v\n", webhook)
+			wac[jid].AddHandler(responseHandler{webhook, uint64(time.Now().Unix())})
+		}
 
 		session, err := WASessionLoad(file)
 		if err != nil {
@@ -213,6 +309,8 @@ func WAMessageText(jid string, jidDest string, msgText string, msgDelay int) err
 			Text: msgText,
 		}
 
+		_, _ = wac[jid].Presence(jidDest + jidPrefix, "composing")
+
 		<-time.After(time.Duration(msgDelay) * time.Second)
 
 		_, err := wac[jid].Send(content)
@@ -249,6 +347,8 @@ func WAMessageImage(jid string, jidDest string, msgImageStream multipart.File, m
 			Type:    msgImageType,
 			Caption: msgCaption,
 		}
+
+		_, _ = wac[jid].Presence(jidDest + jidPrefix, "composing")
 
 		<-time.After(time.Duration(msgDelay) * time.Second)
 
