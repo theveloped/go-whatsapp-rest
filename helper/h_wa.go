@@ -61,8 +61,9 @@ func (wh responseHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	if !message.Info.FromMe {
 		fmt.Printf("[+] Handling image message\n")
 
+		imageIntent := fmt.Sprintf("image: %v", message.Info.Id)
 		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
-		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Caption, "en")
+		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, imageIntent, "en")
 
 		if err != nil {
 			fmt.Printf("[!] %v\n", err)
