@@ -14,11 +14,12 @@ WORKDIR /app
 
 RUN apk add --no-cache git
 RUN go get -u github.com/theveloped/go-whatsapp-rest
+RUN go get -u github.com/Rhymen/go-whatsapp
 RUN go build -o main .
 RUN chmod 777 stores uploads
 
 EXPOSE 3000
-HEALTHCHECK --interval=5s --timeout=3s CMD ["curl", "http://127.0.0.1:3000/health"] || exit 1
+HEALTHCHECK --interval=5s --timeout=3s CMD ["curl", "http://127.0.0.1:3000/api/health"] || exit 1
 
 VOLUME ["/app/stores","/app/uploads"]
 CMD ["./main"]
