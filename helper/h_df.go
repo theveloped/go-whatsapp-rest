@@ -36,9 +36,10 @@ import (
 )
 
 type DialogResponse struct {
-    Intent     string            `json:"intent"`
-    Confidence float32           `json:"confidence"`
-    Entities   map[string]string `json:"entities"`
+    Intent      string              `json:"intent"`
+    Confidence  float32             `json:"confidence"`
+    Entities    map[string]string   `json:"entities"`
+    Fulfillment string              `json:"fulfillment"`
 }
 
 func extractDialogflowEntities(p *structpb.Value) (extractedEntity string) {
@@ -175,6 +176,7 @@ func DetectIntentText(projectID, sessionID, text, languageCode string) (DialogRe
     if queryResult.Intent != nil {
         dr.Intent = queryResult.Intent.DisplayName
         dr.Confidence = float32(queryResult.IntentDetectionConfidence)
+        dr.Fulfillment := queryResult.GetFulfillmentText()
     }
 
     dr.Entities = make(map[string]string)
