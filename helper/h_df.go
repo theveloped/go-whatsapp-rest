@@ -176,7 +176,7 @@ func DetectIntentText(projectID, sessionID, text, languageCode string) (DialogRe
     if queryResult.Intent != nil {
         dr.Intent = queryResult.Intent.DisplayName
         dr.Confidence = float32(queryResult.IntentDetectionConfidence)
-        dr.Fulfillment := queryResult.GetFulfillmentText()
+        dr.Fulfillment = queryResult.GetFulfillmentText()
     }
 
     dr.Entities = make(map[string]string)
