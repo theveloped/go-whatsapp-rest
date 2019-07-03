@@ -19,7 +19,7 @@ RUN go build -o main .
 RUN chmod 777 stores uploads
 
 EXPOSE 3000
-HEALTHCHECK --interval=5s --timeout=3s ["CMD", "curl", "--fail", "http://localhost:3000/api/health"] || exit 1
+HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:3000/api/health || exit 1
 
 VOLUME ["/app/stores","/app/uploads"]
 CMD ["./main"]
