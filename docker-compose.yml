@@ -1,0 +1,16 @@
+version: '2.1'
+services:
+  go-whatsapp-rest:
+    build: .
+    restart: always
+    command: ./main
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - './stores:/app/stores'
+      - './uploads:/app/uploads'
+    ports:
+      - '3000:3000'
