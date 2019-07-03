@@ -257,8 +257,8 @@ func WAConnect(jid string, webhook string, timeout int, file string, qrstr chan<
 		}()
 
 		if len(webhook) > 0 {
-			// fmt.Printf("[!] removing webhooks\n")
-			// wac[jid].RemoveHandlers()
+			fmt.Printf("[!] removing webhooks\n")
+			wac[jid].RemoveHandlers()
 
 			fmt.Printf("[!] adding webhook: %v\n", webhook)
 			wac[jid].AddHandler(responseHandler{webhook, uint64(time.Now().Unix())})
