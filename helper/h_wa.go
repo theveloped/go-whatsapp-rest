@@ -43,8 +43,12 @@ func (wh responseHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	if !message.Info.FromMe {
 		fmt.Printf("[+] Handling text message\n")
 
+		var textArray [256]byte
+		copy(textArray[:], message.Text)
+		limitedText := string(textArray[:])
+
 		remoteJid := strings.Split(message.Info.RemoteJid, "@")[0]
-		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, message.Text, "en")
+		dialogResponse, err := DetectIntentText(svc.Config.GetString("DIALOGFLOW_PROJECT_ID"), remoteJid, limitedText, "en")
 
 		if err != nil {
 			fmt.Printf("[!] %v\n", err)
