@@ -108,6 +108,18 @@ func (wh responseHandler) HandleJsonMessage(message string) {
 
 var wac = make(map[string]*whatsapp.Conn)
 
+func WASyncVersion(conn *whatsapp.Conn) (string, error) {
+	versionServer, err := whatsapp.CheckCurrentServerVersion()
+	if err != nil {
+		return "", err
+	}
+
+	conn.SetClientVersion(versionServer[0], versionServer[1], versionServer[2])
+	versionClient := conn.GetClientVersion()
+
+	return fmt.Sprintf("whatsapp version %v.%v.%v", versionClient[0], versionClient[1], versionClient[2]), nil
+}
+
 func WAInit(jid string, timeout int) error {
 	if wac[jid] == nil {
 		conn, err := whatsapp.NewConn(time.Duration(timeout) * time.Second)
@@ -115,6 +127,14 @@ func WAInit(jid string, timeout int) error {
 			return err
 		}
 		conn.SetClientName("Go WhatsApp REST", "Go WhatsApp")
+		
+		info, err := WASyncVersion(conn)
+		if err != nil {
+			return err
+		}
+		
+		fmt.Printf("[+] %v\n", info)
+		
 		wac[jid] = conn
 	}
 
